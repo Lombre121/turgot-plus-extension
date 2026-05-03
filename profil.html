@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Profil – Turgot+</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="stylesheet" href="css/common.css">
+<style>
+.container { max-width: 680px; margin: auto; padding: calc(var(--nav-h) + 40px) 24px 80px; }
+
+.profile-banner {
+  height: 130px;
+  background: linear-gradient(135deg, #0d1a3e 0%, #0a1628 40%, #1a0d2e 100%);
+  border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+  border: 1px solid var(--border);
+  border-bottom: none;
+  position: relative;
+  overflow: hidden;
+}
+.profile-banner::after {
+  content: '';
+  position: absolute; inset: 0;
+  background: radial-gradient(ellipse 60% 80% at 30% 50%, rgba(59,127,255,0.12) 0%, transparent 70%);
+}
+
+.profile-body {
+  background: var(--bg-2); border: 1px solid var(--border);
+  border-top: none; border-radius: 0 0 var(--radius-xl) var(--radius-xl);
+  padding: 0 32px 32px;
+}
+
+.avatar-row {
+  display: flex; align-items: flex-end; justify-content: space-between;
+  padding-top: 0; margin-top: -36px; margin-bottom: 20px;
+}
+
+.avatar {
+  width: 72px; height: 72px; border-radius: 50%;
+  background: linear-gradient(135deg, var(--blue), var(--orange));
+  border: 3px solid var(--bg-2);
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--font-ui); font-size: 1.6rem; font-weight: 800;
+  color: white; cursor: pointer; position: relative; overflow: hidden;
+  flex-shrink: 0;
+}
+.avatar img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; display: none; }
+.avatar img.loaded { display: block; }
+.avatar-overlay {
+  position: absolute; inset: 0; background: rgba(0,0,0,0.5);
+  display: flex; align-items: center; justify-content: center;
+  border-radius: 50%; opacity: 0; transition: opacity 0.18s;
+}
+.avatar-overlay svg { width: 18px; height: 18px; }
+.avatar:hover .avatar-overlay { opacity: 1; }
+
+.profile-name { font-family: var(--font-ui); font-size: 1.3rem; font-weight: 800; letter-spacing: -0.01em; }
+.profile-email { font-size: 0.82rem; color: var(--text-3); margin-top: 2px; }
+.member-since { font-size: 0.78rem; color: var(--text-3); margin-top: 4px; }
+
+.stats-row { display: flex; gap: 10px; margin: 24px 0; }
+.stat {
+  flex: 1; background: var(--bg-4); border: 1px solid var(--border);
+  border-radius: var(--radius-lg); padding: 16px; text-align: center;
+}
+.stat-n { font-family: var(--font-ui); font-size: 1.6rem; font-weight: 800; color: var(--text); }
+.stat-l { font-size: 0.72rem; color: var(--text-3); margin-top: 3px; font-family: var(--font-ui); text-transform: uppercase; letter-spacing: 0.05em; }
+
+.divider { height: 1px; background: var(--border); margin: 24px 0; }
+
+.section-label { font-family: var(--font-ui); font-size: 0.72rem; font-weight: 700; color: var(--text-3); text-transform: uppercase; letter-spacing: 0.07em; margin-bottom: 14px; }
+
+.save-alert { margin: 14px 0 0; display: none; }
+
+.btn-row { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 20px; }
+
+.custom-select-wrap { position: relative; }
+.custom-select {
+  appearance: none; -webkit-appearance: none;
+  width: 100%; padding: 10px 38px 10px 14px;
+  background: var(--bg-4) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24'%3E%3Cpath fill='%23888' d='M7 10l5 5 5-5z'/%3E%3C/svg%3E") no-repeat right 12px center;
+  border: 1px solid var(--border); border-radius: var(--radius);
+  color: var(--text); font: 500 .9rem var(--font-ui);
+  cursor: pointer; transition: border-color .18s;
+}
+.custom-select:focus { outline: none; border-color: var(--blue); }
+.custom-select:hover { border-color: var(--blue); }
+
+@media(max-width:600px){
+  .container { padding: calc(var(--nav-h)+24px) 16px 60px; }
+  .profile-body { padding: 0 20px 24px; }
+  .stats-row { gap: 8px; }
+}
+
+@media(min-width:900px){
+  .container { max-width: 1100px; padding: calc(var(--nav-h)+56px) 32px 80px; }
+  .profile-banner { height: 200px; border-radius: 20px 20px 0 0; }
+  .profile-body { padding: 0 56px 56px; border-radius: 0 0 20px 20px; }
+  .avatar-row { margin-top: -56px; margin-bottom: 28px; }
+  .avatar { width: 120px; height: 120px; font-size: 2.6rem; border-width: 4px; }
+  .profile-name { font-size: 2rem; }
+  .profile-email { font-size: 0.95rem; margin-top: 4px; }
+  .member-since { font-size: 0.88rem; margin-top: 6px; }
+  .stats-row { gap: 18px; margin: 36px 0; }
+  .stat { padding: 26px 16px; }
+  .stat-n { font-size: 2.4rem; }
+  .stat-l { font-size: 0.78rem; margin-top: 6px; }
+  .divider { margin: 36px 0; }
+  .section-label { font-size: 0.78rem; margin-bottom: 18px; }
+  .field-grid {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 18px 24px;
+  }
+  .btn-row { gap: 14px; margin-top: 28px; }
+  .btn-row .btn { padding: 13px 22px; font-size: 0.92rem; }
+}
+
+@media(min-width:1200px){
+  .container { max-width: 1200px; }
+  .profile-banner { height: 240px; }
+  .avatar { width: 140px; height: 140px; font-size: 3rem; }
+  .avatar-row { margin-top: -68px; }
+  .profile-name { font-size: 2.2rem; }
+}
+</style>
+</head>
+<body>
+<div id="preloader">
+  <div class="loader"></div>
+</div>
+
+<nav id="main-nav"></nav>
+<div class="container">
+  <div id="wrap">
+    <div class="loader" style="padding:80px 0"></div>
+  </div>
+</div>
+<footer>© 2025 Turgot+</footer>
+<script type="module">
+import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
+import { SUPABASE_URL, SUPABASE_KEY, injectNav, ICONS } from './js/config.js';
+import { loadPrefs, savePrefs, DEFAULT_PREFS } from './js/prefs.js';
+const sb = createClient(SUPABASE_URL, SUPABASE_KEY);
+window.__signOut = async()=>{ await sb.auth.signOut(); window.location.href='connexion.html'; };
+
+const {data:{session}} = await sb.auth.getSession();
+if (!session) { window.location.href='connexion.html'; }
+injectNav('profil', session);
+
+const uid = session.user.id;
+const {data:profile} = await sb.from('profiles').select('*').eq('id',uid).single();
+const username = profile?.username || session.user.user_metadata?.username || session.user.email.split('@')[0];
+const email = session.user.email;
+const since = new Date(session.user.created_at).toLocaleDateString('fr-FR',{year:'numeric',month:'long',day:'numeric'});
+const initial = username.charAt(0).toUpperCase();
+
+const [{count:nListe},{count:nVus},{count:nLikes}] = await Promise.all([
+  sb.from('watchlist').select('*',{count:'exact',head:true}).eq('user_id',uid),
+  sb.from('watchlist').select('*',{count:'exact',head:true}).eq('user_id',uid).eq('watched',true),
+  sb.from('likes').select('*',{count:'exact',head:true}).eq('user_id',uid),
+]);
+
+document.getElementById('wrap').innerHTML = `
+  <div class="profile-banner"></div>
+  <div class="profile-body">
+    <div class="avatar-row">
+      <div class="avatar" id="avatar" onclick="document.getElementById('av-input').click()">
+        <img id="av-img" src="" alt="">
+        <span id="av-init">${initial}</span>
+        <div class="avatar-overlay">${ICONS.user}</div>
+      </div>
+      <input type="file" id="av-input" accept="image/*" style="display:none" onchange="uploadAvatar(event)">
+    </div>
+    <div class="profile-name" id="pname">${username}</div>
+    <div class="profile-email">${email}</div>
+    <div class="member-since">Membre depuis le ${since}</div>
+
+    <div class="stats-row">
+      <div class="stat"><div class="stat-n">${nListe??0}</div><div class="stat-l">Ma liste</div></div>
+      <div class="stat"><div class="stat-n">${nVus??0}</div><div class="stat-l">Vus</div></div>
+      <div class="stat"><div class="stat-n">${nLikes??0}</div><div class="stat-l">Likes</div></div>
+    </div>
+
+    <div class="divider"></div>
+    <div class="section-label">Modifier le profil</div>
+
+    <div class="field-grid">
+      <div class="field"><label>Pseudo</label><input type="text" id="e-username" value="${username}"></div>
+      <div class="field"><label>Nouveau mot de passe</label><input type="password" id="e-pwd" placeholder="Laisser vide pour ne pas changer"></div>
+    </div>
+
+    <div id="save-alert" class="save-alert"></div>
+
+    <div class="btn-row">
+      <button class="btn btn-blue" onclick="saveProfile()">${ICONS.save} Sauvegarder</button>
+      <button class="btn btn-red" onclick="if(confirm('Se déconnecter ?'))window.__signOut()">${ICONS.logout} Déconnexion</button>
+    </div>
+
+    <div class="divider"></div>
+    <div class="section-label">Préférences lecteur</div>
+
+    <div class="field-grid">
+
+      <div class="field"><label>Origine préférée</label>
+        <div class="custom-select-wrap">
+          <select id="pref-origin" class="custom-select">
+            <option value="">Auto (meilleure source)</option>
+            <option value="movix">🟢 Movix Premium</option>
+            <option value="rivestream">🟣 Rivestream</option>
+            <option value="nightflix">🟡 Nightflix</option>
+            <option value="cinepro">🔵 CinePro</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="field"><label>Langue vidéo préférée</label>
+        <div class="custom-select-wrap">
+          <select id="pref-lang" class="custom-select">
+            <option value="">Auto</option>
+            <option value="VF">🇫🇷 VF</option>
+            <option value="VOSTFR">🇫🇷 VOSTFR</option>
+            <option value="VO">🇬🇧 VO</option>
+            <option value="MULTI">🌍 Multi</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="field"><label>Sous-titres par défaut</label>
+        <div class="custom-select-wrap">
+          <select id="pref-subLang" class="custom-select">
+            <option value="off">Désactivés</option>
+            <option value="fr">🇫🇷 Français (FR)</option>
+            <option value="en">🇬🇧 Anglais (EN)</option>
+            <option value="es">🇪🇸 Espagnol</option>
+            <option value="de">🇩🇪 Allemand</option>
+            <option value="ar">🇦🇪 Arabe</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="field"><label>Vitesse par défaut</label>
+        <div class="custom-select-wrap">
+          <select id="pref-speed" class="custom-select">
+            <option value="0.5">0.5x — Ralenti</option>
+            <option value="0.75">0.75x</option>
+            <option value="1">1x — Normal</option>
+            <option value="1.25">1.25x</option>
+            <option value="1.5">1.5x</option>
+            <option value="2">2x — Rapide</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="field"><label>Serveur par défaut</label>
+        <div class="custom-select-wrap">
+          <select id="pref-defaultServer" class="custom-select">
+            <option value="iframe">Iframe (auto — Videasy, Vidlink…)</option>
+            <option value="hls">CinePro (VO — HLS)</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="field"><label>Volume par défaut</label>
+        <div class="custom-select-wrap">
+          <select id="pref-vol" class="custom-select">
+            <option value="0.1">10%</option>
+            <option value="0.2">20%</option>
+            <option value="0.3">30%</option>
+            <option value="0.4">40%</option>
+            <option value="0.5">50%</option>
+            <option value="0.6">60%</option>
+            <option value="0.7">70%</option>
+            <option value="0.8">80%</option>
+            <option value="0.9">90%</option>
+            <option value="1">100% (max)</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="field"><label>Taille des sous-titres</label>
+        <div class="custom-select-wrap">
+          <select id="pref-subSize" class="custom-select">
+            <option value="14">Petit (14px)</option>
+            <option value="18">Moyen (18px)</option>
+            <option value="22">Normal (22px)</option>
+            <option value="26">Grand (26px)</option>
+            <option value="32">Très grand (32px)</option>
+            <option value="40">Énorme (40px)</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="field"><label>Décalage sous-titres</label>
+        <div class="custom-select-wrap">
+          <select id="pref-subOffset" class="custom-select">
+            <option value="-5">-5s</option>
+            <option value="-3">-3s</option>
+            <option value="-2">-2s</option>
+            <option value="-1">-1s</option>
+            <option value="0">0s (synchronisé)</option>
+            <option value="1">+1s</option>
+            <option value="2">+2s</option>
+            <option value="3">+3s</option>
+            <option value="5">+5s</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="field"><label>Mode affichage</label>
+        <div class="custom-select-wrap">
+          <select id="pref-fitCover" class="custom-select">
+            <option value="false">Contenir (barres noires)</option>
+            <option value="true">Couvrir (zoom rogné)</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="field"><label>Fond des sous-titres</label>
+        <div class="custom-select-wrap">
+          <select id="pref-subBg" class="custom-select">
+            <option value="true">✓ Avec fond semi-transparent</option>
+            <option value="false">✗ Sans fond (transparent)</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="field"><label>Couleur des sous-titres</label>
+        <div style="display:flex;align-items:center;gap:10px">
+          <input type="color" id="pref-subColor" value="#ffffff"
+            style="width:48px;height:38px;border-radius:6px;border:1px solid var(--border);cursor:pointer;padding:2px;background:var(--bg-4)">
+          <span id="pref-subColor-label" style="font-size:.88rem;color:var(--text-3)">#ffffff</span>
+        </div>
+      </div>
+
+      <div class="field"><label>Filtre luminosité</label>
+        <div class="custom-select-wrap">
+          <select id="pref-fR" class="custom-select">
+            <option value="1.0">Normal (1.0)</option>
+            <option value="1.1">+10%</option>
+            <option value="1.23">+23% (défaut)</option>
+            <option value="1.4">+40%</option>
+            <option value="1.6">+60%</option>
+            <option value="0.9">-10%</option>
+            <option value="0.8">-20%</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="field"><label>Filtre contraste</label>
+        <div class="custom-select-wrap">
+          <select id="pref-fG" class="custom-select">
+            <option value="1.0">Normal (1.0)</option>
+            <option value="1.02">+2% (défaut)</option>
+            <option value="1.1">+10%</option>
+            <option value="1.2">+20%</option>
+            <option value="0.9">-10%</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="field"><label>Filtre saturation</label>
+        <div class="custom-select-wrap">
+          <select id="pref-fB" class="custom-select">
+            <option value="1.0">Normal (1.0)</option>
+            <option value="1.11">+11% (défaut)</option>
+            <option value="1.2">+20%</option>
+            <option value="1.3">+30%</option>
+            <option value="0.9">-10%</option>
+          </select>
+        </div>
+      </div>
+
+    </div>
+
+    <div id="prefs-alert" class="save-alert"></div>
+
+    <div class="btn-row">
+      <button class="btn btn-blue" onclick="savePrefsBtn()">${ICONS.save} Enregistrer les préférences</button>
+      <button class="btn btn-ghost" onclick="resetPrefsBtn()">Réinitialiser</button>
+    </div>
+  </div>`;
+
+if (profile?.avatar_url) {
+  const img = document.getElementById('av-img');
+  img.src = profile.avatar_url;
+  img.onload = () => { img.classList.add('loaded'); document.getElementById('av-init').style.display='none'; };
+}
+
+window.saveProfile = async () => {
+  const newU = document.getElementById('e-username').value.trim();
+  const newP = document.getElementById('e-pwd').value;
+  const alertEl = document.getElementById('save-alert');
+  alertEl.style.display='none'; alertEl.className='save-alert';
+  try {
+    await sb.from('profiles').update({username:newU}).eq('id',uid);
+    await sb.auth.updateUser({data:{username:newU}});
+    if (newP) { if(newP.length<6) throw new Error('Mot de passe trop court (6 min).'); await sb.auth.updateUser({password:newP}); }
+    alertEl.textContent='Profil mis à jour.'; alertEl.className='save-alert alert success'; alertEl.style.display='block';
+    document.getElementById('pname').textContent=newU;
+    document.getElementById('e-pwd').value='';
+  } catch(e) { alertEl.textContent=e.message; alertEl.className='save-alert alert error'; alertEl.style.display='block'; }
+};
+
+// ───── Préférences lecteur ─────
+let __currentPrefs = await loadPrefs(sb, session);
+function closestOption(selectEl, value) {
+  const v = parseFloat(value);
+  const opts = [...selectEl.options].map(o => parseFloat(o.value));
+  let best = 0, bestDist = Infinity;
+  opts.forEach((o, i) => { const d = Math.abs(o - v); if (d < bestDist) { bestDist = d; best = i; } });
+  selectEl.selectedIndex = best;
+}
+function fillPrefsForm(p) {
+  document.getElementById('pref-origin').value    = p.preferredOrigin || '';
+  document.getElementById('pref-lang').value      = p.preferredLang   || '';
+  document.getElementById('pref-subLang').value   = p.defaultSubLang  || 'fr';
+  closestOption(document.getElementById('pref-vol'),       p.volume ?? 1);
+  document.getElementById('pref-speed').value     = String(p.speed ?? 1);
+  closestOption(document.getElementById('pref-subSize'),   p.subSize ?? 22);
+  const subColorEl = document.getElementById('pref-subColor');
+  subColorEl.value = p.subColor || '#ffffff';
+  document.getElementById('pref-subColor-label').textContent = subColorEl.value;
+  closestOption(document.getElementById('pref-subOffset'), p.subOffset ?? 0);
+  const ds = p.defaultServer || 'iframe';
+  document.getElementById('pref-defaultServer').value = (ds === 'myserver' || ds === 'cinepulse') ? 'iframe' : ds;
+  document.getElementById('pref-fitCover').value  = p.fitCover ? 'true' : 'false';
+  document.getElementById('pref-subBg').value     = p.subBg !== false ? 'true' : 'false';
+  closestOption(document.getElementById('pref-fR'), p.bright   ?? 1.23);
+  closestOption(document.getElementById('pref-fG'), p.contrast ?? 1.02);
+  closestOption(document.getElementById('pref-fB'), p.sat      ?? 1.11);
+}
+// Met à jour le label couleur en live
+document.getElementById('pref-subColor')?.addEventListener('input', e => {
+  const lbl = document.getElementById('pref-subColor-label');
+  if (lbl) lbl.textContent = e.target.value;
+});
+function readPrefsForm() {
+  return {
+    preferredOrigin:  document.getElementById('pref-origin').value   || null,
+    preferredLang:    document.getElementById('pref-lang').value     || null,
+    defaultSubLang:   document.getElementById('pref-subLang').value  || 'fr',
+    defaultServer:    document.getElementById('pref-defaultServer').value || 'iframe',
+    volume:    parseFloat(document.getElementById('pref-vol').value),
+    speed:     parseFloat(document.getElementById('pref-speed').value),
+    subSize:   parseFloat(document.getElementById('pref-subSize').value),
+    subColor:  document.getElementById('pref-subColor').value,
+    subOffset: parseFloat(document.getElementById('pref-subOffset').value) || 0,
+    subBg:     document.getElementById('pref-subBg').value !== 'false',
+    fitCover:  document.getElementById('pref-fitCover').value === 'true',
+    bright:    parseFloat(document.getElementById('pref-fR').value) || 1.23,
+    contrast:  parseFloat(document.getElementById('pref-fG').value) || 1.02,
+    sat:       parseFloat(document.getElementById('pref-fB').value) || 1.11,
+  };
+}
+fillPrefsForm(__currentPrefs);
+
+window.savePrefsBtn = async () => {
+  const p = readPrefsForm();
+  const a = document.getElementById('prefs-alert');
+  a.style.display='none'; a.className='save-alert';
+  try {
+    await savePrefs(sb, session, p, { immediate: true });
+    __currentPrefs = p;
+    a.textContent='Préférences enregistrées.'; a.className='save-alert alert success'; a.style.display='block';
+  } catch(e) {
+    a.textContent='Erreur : '+e.message; a.className='save-alert alert error'; a.style.display='block';
+  }
+};
+
+window.resetPrefsBtn = async () => {
+  if (!confirm('Réinitialiser toutes les préférences du lecteur aux valeurs par défaut ?')) return;
+  const p = JSON.parse(JSON.stringify(DEFAULT_PREFS));
+  fillPrefsForm(p);
+  try {
+    await savePrefs(sb, session, p, { immediate: true });
+    __currentPrefs = p;
+    const a = document.getElementById('prefs-alert');
+    a.textContent='Préférences réinitialisées.'; a.className='save-alert alert success'; a.style.display='block';
+  } catch(e) {
+    const a = document.getElementById('prefs-alert');
+    a.textContent='Erreur : '+e.message; a.className='save-alert alert error'; a.style.display='block';
+  }
+};
+
+window.uploadAvatar = async (e) => {
+  const file=e.target.files[0]; if(!file) return;
+  const ext=file.name.split('.').pop();
+  const path=`avatars/${uid}.${ext}`;
+  const {error}=await sb.storage.from('avatars').upload(path,file,{upsert:true});
+  if(error){alert('Erreur upload: '+error.message);return;}
+  const {data:{publicUrl}}=sb.storage.from('avatars').getPublicUrl(path);
+  await sb.from('profiles').update({avatar_url:publicUrl}).eq('id',uid);
+  const img=document.getElementById('av-img');
+  img.src=publicUrl+'?t='+Date.now();
+  img.onload=()=>{img.classList.add('loaded');document.getElementById('av-init').style.display='none';};
+};
+</script>
+</body>
+</html>

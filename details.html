@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Détails – Turgot+</title>
+
+  <link rel="stylesheet" href="css/common.css">
+  <link rel="stylesheet" href="css/details.css">
+</head>
+
+<body class="details-body">
+
+<div id="preloader">
+  <div class="loader"></div>
+</div>
+
+<header id="main-nav"></header>
+
+<main class="details-page">
+
+  <!-- HERO DESKTOP : BACKDROP + LOGO (≥900px) -->
+  <section class="hero-desktop" id="hero-desktop">
+    <img class="hero-desktop-bg" id="hero-desktop-bg" alt="">
+    <div class="hero-desktop-fade"></div>
+    <div class="hero-desktop-info">
+      <img class="hero-desktop-logo" id="hero-desktop-logo" alt="" hidden>
+      <h1 class="hero-desktop-title" id="hero-desktop-title"></h1>
+    </div>
+  </section>
+
+  <!-- HERO : POSTER FULL WIDTH + ACTIONS -->
+  <section class="hero">
+    <div class="hero-poster-wrap">
+      <img id="poster" class="hero-poster" alt="">
+      <div class="hero-gradient"></div>
+
+      <div class="hero-actions">
+        <button id="play-btn" class="btn btn-blue hero-btn">
+          <svg width="16" height="16" viewBox="0 0 24 24">
+            <path fill="currentColor" d="M8 5v14l11-7z"/>
+          </svg>
+          Regarder
+        </button>
+
+        <button id="list-btn" class="btn btn-ghost hero-btn">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="12" y1="5" x2="12" y2="19"></line>
+            <line x1="5" y1="12" x2="19" y2="12"></line>
+          </svg>
+          Ma liste
+        </button>
+      </div>
+
+      <div class="hero-secondary-actions">
+
+        <button id="seen-btn" class="btn btn-ghost hero-mini">
+          <svg width="14" height="14" viewBox="0 0 24 24"><path fill="currentColor" d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+          Vu
+        </button>
+
+        <button id="like-btn" class="btn btn-ghost hero-mini">
+          <svg width="14" height="14" viewBox="0 0 24 24"><path fill="currentColor" d="M12 21s-7-4.35-7-10a4 4 0 017-2.65A4 4 0 0119 11c0 5.65-7 10-7 10z"/></svg>
+          J'aime <span id="like-count" class="like-count"></span>
+        </button>
+
+        <button id="share-btn" class="btn btn-ghost hero-mini">
+          <svg width="14" height="14" viewBox="0 0 24 24"><path fill="currentColor" d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7a3.27 3.27 0 000-1.39l7.02-4.11A2.99 2.99 0 0018 7.91a3 3 0 10-3-3c0 .23.03.45.08.67L8.06 9.7a3 3 0 100 4.6l7.02 4.11c-.05.22-.08.44-.08.67a3 3 0 103-3z"/></svg>
+          Partager
+        </button>
+
+        <button id="download-btn" class="btn btn-ghost hero-mini">
+          <svg width="14" height="14" viewBox="0 0 24 24"><path fill="currentColor" d="M5 20h14v-2H5m14-9h-4V3H9v6H5l7 7 7-7z"/></svg>
+          Télécharger
+        </button>
+
+      </div>
+    </div>
+
+    <div class="hero-text">
+      <h1 id="title" class="hero-title"></h1>
+      <p id="original-title" class="hero-subtitle"></p>
+
+      <div class="hero-meta">
+        <span id="rating"></span>
+        <span id="runtime"></span>
+        <span id="certif"></span>
+      </div>
+
+      <div id="genres" class="hero-genres"></div>
+    </div>
+  </section>
+
+  <!-- SYNOPSIS -->
+  <section class="block">
+    <h2 class="section-title">Synopsis</h2>
+    <p id="overview" class="block-text"></p>
+  </section>
+
+  <!-- CAST -->
+  <section class="block">
+    <h2 class="section-title">Cast</h2>
+    <div id="cast" class="cast-strip"></div>
+  </section>
+
+  <!-- BANDE-ANNONCE -->
+  <section class="block">
+    <h2 class="section-title">Bande-annonce</h2>
+    <div id="trailer" class="trailer-wrap"></div>
+  </section>
+
+  <!-- INFORMATIONS TMDB -->
+  <section class="block">
+    <h2 class="section-title">Informations</h2>
+    <div id="infos" class="info-grid"></div>
+  </section>
+
+  <!-- CARROUSEL D’IMAGES -->
+  <section class="block">
+    <div class="section-header-row">
+      <h2 class="section-title">Images</h2>
+      <div class="carousel-controls">
+        <button id="carousel-prev" class="carousel-btn">
+          <svg width="14" height="14" viewBox="0 0 24 24"><path fill="currentColor" d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/></svg>
+        </button>
+
+        <button id="carousel-next" class="carousel-btn">
+          <svg width="14" height="14" viewBox="0 0 24 24"><path fill="currentColor" d="M8.59 16.59L10 18l6-6-6-6-1.41 1.41L13.17 12z"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <div id="images-carousel" class="images-carousel">
+      <div id="images" class="images-track"></div>
+    </div>
+  </section>
+
+  <!-- SAISONS (SÉRIES) — MENU DÉROULANT CUSTOM -->
+  <section class="block" id="seasons-block" style="display:none;">
+    <h2 class="section-title">Saisons</h2>
+
+    <div class="season-selector">
+      <button id="season-btn" class="season-btn" type="button" aria-haspopup="listbox" aria-expanded="false">
+        <span>Saison <span id="season-current">1</span></span>
+        <svg width="14" height="14" viewBox="0 0 24 24" aria-hidden="true">
+          <path fill="currentColor" d="M7 10l5 5 5-5z"/>
+        </svg>
+      </button>
+      <ul id="season-menu" class="season-menu" role="listbox"></ul>
+    </div>
+  </section>
+
+  <!-- ÉPISODES -->
+  <section class="block" id="episodes-block" style="display:none;">
+    <h2 class="section-title">Épisodes</h2>
+    <div id="episodes" class="episodes-list"></div>
+  </section>
+
+  <!-- RECOMMANDATIONS -->
+  <section class="block">
+    <h2 class="section-title">Recommandations</h2>
+    <div id="reco" class="reco-strip"></div>
+  </section>
+
+</main>
+
+<footer>
+  © 2026 Turgot+ — Tous droits réservés.
+</footer>
+
+<!-- MODAL TÉLÉCHARGEMENT (vidvault + sources API) -->
+<div id="download-modal" class="modal hidden">
+  <div class="modal-content dl-modal">
+    <div class="modal-icon">
+      <svg width="32" height="32" viewBox="0 0 24 24">
+        <path fill="currentColor" d="M5 20h14v-2H5m14-9h-4V3H9v6H5l7 7 7-7z"/>
+      </svg>
+    </div>
+
+    <h3>Télécharger</h3>
+    <p>Choisis une source ci-dessous, ou utilise VidVault pour des qualités supplémentaires.</p>
+
+    <div class="dl-section">
+      <div class="dl-section-title">VidVault (téléchargement externe)</div>
+      <div class="dl-vidvault-row">
+        <input id="dl-vidvault-link" readonly>
+        <button id="dl-vidvault" class="btn btn-blue">Ouvrir</button>
+      </div>
+    </div>
+
+    <div class="dl-section">
+      <div class="dl-section-title">Sources directes (notre serveur)</div>
+      <div id="dl-qualities" class="dl-qualities"></div>
+    </div>
+
+    <div class="modal-actions">
+      <button id="close-modal" class="btn btn-ghost full">Fermer</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL CONFIRMATION IMAGE -->
+<div id="confirm-modal" class="modal hidden">
+  <div class="modal-content premium">
+    <div class="modal-icon">
+      <svg width="32" height="32" viewBox="0 0 24 24">
+        <path fill="currentColor" d="M21 19V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v14l4-4h10l4 4z"/>
+      </svg>
+    </div>
+
+    <h3>Télécharger l’image ?</h3>
+    <p>Vous allez ouvrir l’image en haute qualité dans un nouvel onglet.</p>
+
+    <div class="modal-actions">
+      <button id="confirm-yes" class="btn btn-blue full">Télécharger</button>
+      <button id="confirm-no" class="btn btn-ghost full">Annuler</button>
+    </div>
+  </div>
+</div>
+
+<script type="module" src="js/details.js"></script>
+
+</body>
+</html>

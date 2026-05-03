@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Recherche – Turgot+</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="stylesheet" href="css/common.css">
+<style>
+.container { max-width: 1440px; margin: auto; padding: calc(var(--nav-h) + 40px) 36px 80px; }
+
+.search-wrap {
+  max-width: 600px;
+  margin: 0 auto 28px;
+  position: relative;
+}
+.search-wrap svg {
+  position: absolute; left: 16px; top: 50%; transform: translateY(-50%);
+  width: 16px; height: 16px; color: var(--text-3); pointer-events: none;
+}
+.search-wrap input {
+  width: 100%; padding: 14px 18px 14px 46px;
+  border-radius: var(--radius-lg);
+  background: var(--bg-3); border: 1px solid var(--border-2);
+  color: var(--text); font-size: 0.95rem; outline: none;
+  font-family: var(--font); transition: border-color 0.18s, background 0.18s;
+}
+.search-wrap input:focus { border-color: var(--blue); background: var(--bg-4); }
+.search-wrap input::placeholder { color: var(--text-3); }
+
+.search-meta {
+  max-width: 600px; margin: 0 auto 24px;
+  display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;
+}
+
+.results-count { font-size: 0.82rem; color: var(--text-3); font-family: var(--font-ui); }
+
+.placeholder-full {
+  text-align: center; padding: 100px 20px; color: var(--text-3);
+}
+.placeholder-full svg { width: 32px; height: 32px; opacity: 0.3; margin-bottom: 14px; display: block; margin: 0 auto 14px; }
+.placeholder-full p { font-size: 0.9rem; }
+
+@media(max-width:600px){ .container { padding: calc(var(--nav-h)+28px) 16px 60px; } }
+#main-nav {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: var(--nav-h);
+  z-index: 1000;
+}
+
+.container {
+  padding-top: calc(var(--nav-h) + 40px);
+}
+
+</style>
+</head>
+<body>
+<div id="preloader">
+  <div class="loader"></div>
+</div>
+
+<nav id="main-nav"></nav>
+<div class="container">
+  <div class="search-wrap">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+    <input type="text" id="search-input" placeholder="Rechercher un film, une série…" autofocus>
+  </div>
+  <div class="search-meta">
+    <div class="pills" id="filters">
+      <button class="pill active" data-f="all">Tout</button>
+      <button class="pill" data-f="movie">Films</button>
+      <button class="pill" data-f="tv">Séries</button>
+    </div>
+    <span class="results-count" id="count"></span>
+  </div>
+  <div id="results">
+    <div class="placeholder-full">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <p>Tape le nom d'un film ou d'une série</p>
+    </div>
+  </div>
+</div>
+<footer>© 2025 Turgot+</footer>
+<script type="module">
+import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
+import { SUPABASE_URL, SUPABASE_KEY, injectNav, createCard, loader, ICONS } from './js/config.js';
+const sb = createClient(SUPABASE_URL, SUPABASE_KEY);
+window.__signOut = async()=>{await sb.auth.signOut();window.location.href='connexion.html';};
+const TMDB='d40428d49744c5a2ba87bdad5d750538';
+let session=null,watchlist=[],likes=[],filter='all',debounce,lastQ='';
+
+const {data}=await sb.auth.getSession(); session=data.session; injectNav('recherche',session);
+if(session){
+  const [wl,lk]=await Promise.all([
+    sb.from('watchlist').select('tmdb_id,media_type').eq('user_id',session.user.id),
+    sb.from('likes').select('tmdb_id,media_type').eq('user_id',session.user.id)
+  ]);
+  watchlist=wl.data||[]; likes=lk.data||[];
+}
+
+document.getElementById('search-input').addEventListener('input', e => {
+  clearTimeout(debounce);
+  const q = e.target.value.trim();
+  if (q.length < 2) {
+    document.getElementById('count').textContent = '';
+    document.getElementById('results').innerHTML = `<div class="placeholder-full">${ICONS.search}<p>Tape le nom d'un film ou d'une série</p></div>`;
+    return;
+  }
+  debounce = setTimeout(() => search(q), 360);
+});
+
+document.querySelectorAll('.pill').forEach(btn => {
+  btn.addEventListener('click', () => {
+    filter = btn.dataset.f;
+    document.querySelectorAll('.pill').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    if (lastQ.length >= 2) search(lastQ);
+  });
+});
+
+async function search(q) {
+  lastQ = q;
+  document.getElementById('results').innerHTML = loader();
+  const r = await fetch(`https://api.themoviedb.org/3/search/multi?api_key=${TMDB}&language=fr&query=${encodeURIComponent(q)}`);
+  const d = await r.json();
+  let items = (d.results||[]).filter(i => i.poster_path && (i.media_type==='movie'||i.media_type==='tv'));
+  if (filter !== 'all') items = items.filter(i => i.media_type === filter);
+
+  document.getElementById('count').textContent = items.length ? `${items.length} résultat${items.length>1?'s':''}` : '';
+
+  if (!items.length) {
+    document.getElementById('results').innerHTML = `<div class="placeholder-full">${ICONS.search}<p>Aucun résultat pour « ${q} »</p></div>`;
+    return;
+  }
+  const grid = document.createElement('div'); grid.className = 'cards-grid';
+  items.forEach(item => grid.appendChild(createCard(item, item.media_type, watchlist, likes, sb, session)));
+  document.getElementById('results').innerHTML = '';
+  document.getElementById('results').appendChild(grid);
+}
+</script>
+</body>
+</html>

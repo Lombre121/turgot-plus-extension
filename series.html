@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Séries – Turgot+</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="stylesheet" href="css/common.css">
+<style>
+.container{max-width:1440px;margin:auto;padding:calc(var(--nav-h) + 40px) 36px 80px;}
+.page-head{margin-bottom:28px;}
+.page-head h1{font-family:var(--font-ui);font-size:2rem;font-weight:800;letter-spacing:-0.02em;margin-bottom:16px;}
+@media(max-width:600px){.container{padding:calc(var(--nav-h)+28px) 16px 60px;}}
+</style>
+</head>
+<body>
+<div id="preloader">
+  <div class="loader"></div>
+</div>
+
+<nav id="main-nav"></nav>
+<div class="container">
+  <div class="page-head">
+    <h1>Séries</h1>
+    <div class="pills">
+      <button class="pill active" data-ep="on_the_air">En cours</button>
+      <button class="pill" data-ep="popular">Populaires</button>
+      <button class="pill" data-ep="top_rated">Mieux notées</button>
+      <button class="pill" data-ep="airing_today">Aujourd'hui</button>
+    </div>
+  </div>
+  <div id="grid"></div>
+</div>
+<footer>© 2025 Turgot+</footer>
+<script type="module">
+import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
+import { SUPABASE_URL, SUPABASE_KEY, injectNav, createCard, loader } from './js/config.js';
+const sb = createClient(SUPABASE_URL, SUPABASE_KEY);
+window.__signOut = async()=>{await sb.auth.signOut();window.location.href='connexion.html';};
+const TMDB='d40428d49744c5a2ba87bdad5d750538';
+let session=null,watchlist=[],likes=[];
+
+const {data}=await sb.auth.getSession(); session=data.session; injectNav('series',session);
+if(session){
+  const [wl,lk]=await Promise.all([
+    sb.from('watchlist').select('tmdb_id,media_type').eq('user_id',session.user.id),
+    sb.from('likes').select('tmdb_id,media_type').eq('user_id',session.user.id)
+  ]);
+  watchlist=wl.data||[]; likes=lk.data||[];
+}
+
+document.querySelectorAll('.pill').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    document.querySelectorAll('.pill').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active'); load(btn.dataset.ep);
+  });
+});
+
+async function load(ep){
+  document.getElementById('grid').innerHTML=loader();
+  const r=await fetch(`https://api.themoviedb.org/3/tv/${ep}?api_key=${TMDB}&language=fr`);
+  const d=await r.json();
+  const grid=document.createElement('div'); grid.className='cards-grid';
+  d.results.filter(s=>s.poster_path).slice(0,20).forEach(s=>grid.appendChild(createCard(s,'tv',watchlist,likes,sb,session)));
+  document.getElementById('grid').innerHTML='';
+  document.getElementById('grid').appendChild(grid);
+}
+load('on_the_air');
+</script>
+</body>
+</html>

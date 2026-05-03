@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Turgot+</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="stylesheet" href="css/common.css">
+<link rel="manifest" href="/manifest.json">
+<style>
+.hero {
+  position: relative;
+  padding: calc(var(--nav-h) + 60px) 36px 60px;
+  overflow: hidden;
+}
+.hero-bg {
+  position: absolute; inset: 0;
+  background: radial-gradient(ellipse 80% 60% at 50% 0%, rgba(59,127,255,0.08) 0%, transparent 70%);
+  pointer-events: none;
+}
+.hero-content { position: relative; max-width: 560px; }
+.hero-eyebrow {
+  display: inline-flex; align-items: center; gap: 7px;
+  background: var(--bg-4); border: 1px solid var(--border-2);
+  border-radius: 100px; padding: 5px 12px 5px 8px;
+  font-family: var(--font-ui); font-size: 0.75rem; font-weight: 600;
+  color: var(--text-2); margin-bottom: 20px; letter-spacing: 0.04em; text-transform: uppercase;
+}
+.hero-eyebrow span { width: 6px; height: 6px; border-radius: 50%; background: var(--blue); display: inline-block; }
+.hero h1 {
+  font-family: var(--font-ui); font-size: clamp(2.2rem, 4vw, 3.4rem);
+  font-weight: 800; line-height: 1.1; letter-spacing: -0.03em;
+  color: var(--text); margin-bottom: 14px;
+}
+.hero h1 em { font-style: normal; color: var(--blue); }
+.hero p { font-size: 1rem; color: var(--text-2); line-height: 1.7; font-weight: 300; }
+
+.main { max-width: 1440px; margin: auto; padding: 0 36px 80px; }
+
+@media (max-width: 600px) {
+  .hero { padding: calc(var(--nav-h) + 40px) 20px 40px; }
+  .main { padding: 0 16px 60px; }
+}
+</style>
+
+</head>
+<body>
+<div id="preloader">
+  <div class="loader"></div>
+</div>
+
+<nav id="main-nav"></nav>
+
+<div class="hero">
+  <div class="hero-bg"></div>
+  <div class="hero-content">
+    <div class="hero-eyebrow"><span></span>Streaming</div>
+    <h1>Votre cinéma,<br>sur <em>Turgot+</em></h1>
+    <p>Films et séries en streaming libre. Découvrez les nouveautés du moment.</p>
+  </div>
+</div>
+
+<main class="main">
+  <section class="grid-section">
+    <div class="section-header">
+      <h2 class="section-title">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="20" rx="2.18"/><line x1="7" y1="2" x2="7" y2="22"/><line x1="17" y1="2" x2="17" y2="22"/><line x1="2" y1="12" x2="22" y2="12"/></svg>
+        Films en salle
+      </h2>
+      <a href="film.html" class="btn btn-ghost" style="font-size:0.8rem;padding:7px 14px">Voir tout</a>
+    </div>
+    <div id="movies-grid" class="cards-grid"></div>
+  </section>
+
+  <section class="grid-section">
+    <div class="section-header">
+      <h2 class="section-title">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+        Séries en cours
+      </h2>
+      <a href="series.html" class="btn btn-ghost" style="font-size:0.8rem;padding:7px 14px">Voir tout</a>
+    </div>
+    <div id="series-grid" class="cards-grid"></div>
+  </section>
+</main>
+
+<footer>© 2025 Turgot+</footer>
+
+<script type="module">
+import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
+import { SUPABASE_URL, SUPABASE_KEY, injectNav, createCard, loader } from './js/config.js';
+
+const sb = createClient(SUPABASE_URL, SUPABASE_KEY);
+window.__signOut = async () => { await sb.auth.signOut(); window.location.href = 'connexion.html'; };
+
+const TMDB = 'd40428d49744c5a2ba87bdad5d750538';
+let session = null, watchlist = [], likes = [];
+
+document.getElementById('movies-grid').innerHTML = loader();
+document.getElementById('series-grid').innerHTML = loader();
+
+const { data } = await sb.auth.getSession();
+session = data.session;
+injectNav('accueil', session);
+
+if (session) {
+  const [wl, lk] = await Promise.all([
+    sb.from('watchlist').select('tmdb_id,media_type').eq('user_id', session.user.id),
+    sb.from('likes').select('tmdb_id,media_type').eq('user_id', session.user.id),
+  ]);
+  watchlist = wl.data || [];
+  likes = lk.data || [];
+}
+
+const [mr, sr] = await Promise.all([
+  fetch(`https://api.themoviedb.org/3/movie/now_playing?api_key=${TMDB}&language=fr`).then(r => r.json()),
+  fetch(`https://api.themoviedb.org/3/tv/on_the_air?api_key=${TMDB}&language=fr`).then(r => r.json()),
+]);
+
+const mg = document.getElementById('movies-grid');
+mg.innerHTML = '';
+mr.results.filter(m => m.poster_path).slice(0, 12).forEach(m =>
+  mg.appendChild(createCard(m, 'movie', watchlist, likes, sb, session))
+);
+
+const sg = document.getElementById('series-grid');
+sg.innerHTML = '';
+sr.results.filter(s => s.poster_path).slice(0, 12).forEach(s =>
+  sg.appendChild(createCard(s, 'tv', watchlist, likes, sb, session))
+);
+
+if ("serviceWorker" in navigator) {
+  navigator.serviceWorker.register("/pwabuilder-sw.js");
+}
+
+</script>
+</body>
+</html>

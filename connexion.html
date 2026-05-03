@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Connexion – Turgot+</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="stylesheet" href="css/common.css">
+<style>
+.auth-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: calc(100vh - var(--nav-h, 60px) - 200px);
+  padding: calc(var(--nav-h, 60px) + 40px) 20px 40px;
+}
+body::before {
+  content: ''; position: fixed; inset: 0; pointer-events: none;
+  background: radial-gradient(ellipse 70% 50% at 50% 0%, rgba(59,127,255,0.06) 0%, transparent 70%);
+}
+
+.auth-card {
+  width: 100%; max-width: 400px;
+  background: var(--bg-2);
+  border: 1px solid var(--border-2);
+  border-radius: var(--radius-xl);
+  padding: 40px 36px;
+  box-shadow: var(--shadow-xl);
+  position: relative;
+}
+
+.auth-logo { display: flex; justify-content: center; margin-bottom: 32px; }
+.auth-logo img { height: 32px; opacity: 0.9; }
+
+.auth-tabs {
+  display: flex;
+  background: var(--bg-4);
+  border-radius: var(--radius);
+  padding: 3px; gap: 3px;
+  margin-bottom: 28px;
+}
+.auth-tab {
+  flex: 1; padding: 9px; text-align: center;
+  font-family: var(--font-ui); font-weight: 600; font-size: 0.85rem;
+  cursor: pointer; border-radius: 8px; color: var(--text-2);
+  transition: all 0.18s; border: none; background: none;
+}
+.auth-tab.active { background: var(--bg-2); color: var(--text); box-shadow: 0 1px 6px rgba(0,0,0,0.3); }
+
+.auth-heading { font-family: var(--font-ui); font-size: 1.35rem; font-weight: 700; margin-bottom: 4px; letter-spacing: -0.01em; }
+.auth-sub { font-size: 0.85rem; color: var(--text-2); margin-bottom: 24px; font-weight: 300; }
+
+.form-panel { display: none; }
+.form-panel.active { display: block; }
+
+.btn-full { width: 100%; justify-content: center; padding: 13px; font-size: 0.9rem; margin-top: 6px; }
+</style>
+</head>
+<body>
+<div id="preloader"><div class="loader"></div></div>
+<header id="main-nav"></header>
+
+<div class="auth-wrap">
+  <div class="auth-card">
+    <div class="auth-logo">
+      <img src="https://fontmeme.com/permalink/251118/641e420a0d47cd6fde155dd167a7614b.png" alt="Turgot+">
+    </div>
+
+    <div class="auth-tabs">
+      <button class="auth-tab active" id="tab-login" onclick="switchTab('login')">Connexion</button>
+      <button class="auth-tab" id="tab-register" onclick="switchTab('register')">Inscription</button>
+    </div>
+
+    <!-- LOGIN -->
+    <div class="form-panel active" id="panel-login">
+      <h2 class="auth-heading">Bon retour</h2>
+      <p class="auth-sub">Connecte-toi à ton compte</p>
+      <div class="alert" id="login-error" style="display:none"></div>
+      <div class="field"><label>Email</label><input type="email" id="login-email" placeholder="ton@email.com" autocomplete="email"></div>
+      <div class="field"><label>Mot de passe</label><input type="password" id="login-pwd" placeholder="••••••••" autocomplete="current-password"></div>
+      <button class="btn btn-blue btn-full" id="login-btn" onclick="handleLogin()">Se connecter</button>
+    </div>
+
+    <!-- REGISTER -->
+    <div class="form-panel" id="panel-register">
+      <h2 class="auth-heading">Créer un compte</h2>
+      <p class="auth-sub">Rejoins Turgot+ gratuitement</p>
+      <div class="alert" id="reg-error" style="display:none"></div>
+      <div class="alert" id="reg-success" style="display:none"></div>
+      <div class="field"><label>Pseudo</label><input type="text" id="reg-username" placeholder="Ton pseudo"></div>
+      <div class="field"><label>Email</label><input type="email" id="reg-email" placeholder="ton@email.com"></div>
+      <div class="field"><label>Mot de passe</label><input type="password" id="reg-pwd" placeholder="6 caractères min."></div>
+      <div class="field"><label>Confirmer</label><input type="password" id="reg-confirm" placeholder="••••••••"></div>
+      <button class="btn btn-blue btn-full" id="reg-btn" onclick="handleRegister()">Créer mon compte</button>
+    </div>
+  </div>
+</div>
+
+<footer></footer>
+<script type="module">
+import { injectNav } from './js/config.js';
+import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
+import { SUPABASE_URL, SUPABASE_KEY } from './js/config.js';
+const sb = createClient(SUPABASE_URL, SUPABASE_KEY);
+
+window.__signOut = async () => { await sb.auth.signOut(); location.href='connexion.html'; };
+const { data: { session } } = await sb.auth.getSession();
+if (session) window.location.href = 'index.html';
+injectNav('connexion', session);
+
+// Enter key
+document.querySelectorAll('input').forEach(inp => {
+  inp.addEventListener('keydown', e => {
+    if (e.key !== 'Enter') return;
+    const panel = inp.closest('.form-panel');
+    if (panel.id === 'panel-login') handleLogin();
+    else handleRegister();
+  });
+});
+
+window.switchTab = tab => {
+  ['login','register'].forEach(t => {
+    document.getElementById(`tab-${t}`).classList.toggle('active', t===tab);
+    document.getElementById(`panel-${t}`).classList.toggle('active', t===tab);
+  });
+  document.querySelectorAll('.alert').forEach(a => a.style.display='none');
+};
+
+function showMsg(id, msg, type='error') {
+  const el = document.getElementById(id);
+  el.textContent = msg;
+  el.className = `alert ${type}`;
+  el.style.display = 'block';
+}
+
+window.handleLogin = async () => {
+  const email = document.getElementById('login-email').value.trim();
+  const pwd   = document.getElementById('login-pwd').value;
+  if (!email || !pwd) { showMsg('login-error','Remplis tous les champs.'); return; }
+  const btn = document.getElementById('login-btn');
+  btn.disabled = true; btn.innerHTML = '<span class="spin"></span>';
+  const { error } = await sb.auth.signInWithPassword({ email, password: pwd });
+  if (error) showMsg('login-error', error.message.includes('Invalid') ? 'Email ou mot de passe incorrect.' : error.message);
+  else window.location.href = 'index.html';
+  btn.disabled = false; btn.textContent = 'Se connecter';
+};
+
+window.handleRegister = async () => {
+  const username = document.getElementById('reg-username').value.trim();
+  const email    = document.getElementById('reg-email').value.trim();
+  const pwd      = document.getElementById('reg-pwd').value;
+  const confirm  = document.getElementById('reg-confirm').value;
+  if (!username||!email||!pwd||!confirm) { showMsg('reg-error','Remplis tous les champs.'); return; }
+  if (username.length < 3) { showMsg('reg-error','Pseudo trop court (3 min).'); return; }
+  if (pwd.length < 6) { showMsg('reg-error','Mot de passe trop court (6 min).'); return; }
+  if (pwd !== confirm) { showMsg('reg-error','Les mots de passe ne correspondent pas.'); return; }
+  const btn = document.getElementById('reg-btn');
+  btn.disabled = true; btn.innerHTML = '<span class="spin"></span>';
+  const { data, error } = await sb.auth.signUp({ email, password: pwd, options: { data: { username } } });
+  if (error) { showMsg('reg-error', error.message); }
+  else {
+    if (data.user) await sb.from('profiles').upsert({ id:data.user.id, username, email, avatar_url:null, created_at:new Date().toISOString() });
+    showMsg('reg-success', 'Compte créé — connecte-toi !', 'success');
+    setTimeout(() => window.switchTab('login'), 1800);
+  }
+  btn.disabled = false; btn.textContent = 'Créer mon compte';
+};
+</script>
+</body>
+</html>
+
